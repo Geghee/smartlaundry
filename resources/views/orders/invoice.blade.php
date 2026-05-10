@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice SmartLaundry - {{ $order->order_number }}</title>
+    <style>
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #333; line-height: 1.6; }
+        .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); }
+        
+        /* Header Styling */
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #3498db; padding-bottom: 20px; margin-bottom: 20px; }
+        .company-info h1 { color: #3498db; margin: 0; text-transform: uppercase; }
+        .company-info p { margin: 0; font-size: 12px; color: #777; }
+        
+        /* Information Section */
+        .info-section { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 14px; }
+        .info-section div { width: 48%; }
+        
+        /* Table Styling */
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background-color: #f2f2f2; border: 1px solid #ddd; padding: 12px; }
+        td { border: 1px solid #ddd; padding: 12px; }
+        
+        .total-row { font-weight: bold; background-color: #f9f9f9; }
+        .status-badge { padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .paid { background-color: #d4edda; color: #155724; }
+        .unpaid { background-color: #f8d7da; color: #721c24; }
+        
+        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
+    </style>
+</head>
+
+@php
+
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+
+@endphp
+
+<body>
+
+<div class="invoice-box">
+    <div class="header">
+        <div class="company-info">
+            <h1>SmartLaundry</h1>
+            <p>Solusi Laundry Digital Berbasis Cloud</p>
+            <p>Jl. Pedurungan Raya No. 12, Semarang</p>
+        </div>
+        <div style="text-align: right;">
+            <h2 style="margin: 0; color: #555;">INVOICE</h2>
+            <p style="margin: 0;">#{{ $order->order_number ?? 'ORD-'.time() }}</p>
+            <p style="margin: 0;">Tanggal: {{ date('d/m/Y') }}</p>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <div>
+            <strong>Penerima:</strong><br>
+            {{ $order->nama_pelanggan }}<br>
+            {{ $order->no_hp }}
+        </div>
+        <div style="text-align: right;">
+            <strong>Metode Pengambilan:</strong><br>
+            {{ $order->delivery_type ?? 'Self-Pickup' }}<br>
+            <strong>Status Pembayaran:</strong><br>
+            <span class="status-badge {{ $order->payment_status == 'Lunas' ? 'paid' : 'unpaid' }}">
+                {{ $order->payment_status ?? 'Belum Lunas' }}
+            </span>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Deskripsi Layanan</th>
+                <th>Berat / Satuan</th>
+                <th>Harga per Kg</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ $order->jenis_laundry }}</td>
+                <td>{{ $order->berat }} Kg</td>
+                <td>Rp {{ number_format($order->total_harga / $order->berat, 0, ',', '.') }}</td>
+                <td>Rp {{ number_format($order->total_harga, 0, ',', '.') }}</td>
+            </tr>
+            @if(isset($order->biaya_antar))
+            <tr>
+                <td colspan="3" style="text-align: right;">Biaya Antar/Jemput</td>
+                <td>Rp {{ number_format($order->biaya_antar, 0, ',', '.') }}</td>
+            </tr>
+            @endif
+            <tr class="total-row">
+                <td colspan="3" style="text-align: right;">TOTAL PEMBAYARAN</td>
+                <td style="color: #3498db; font-size: 18px;">Rp {{ number_format($order->total_harga + ($order->biaya_antar ?? 0), 0, ',', '.') }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="qr-code" style="text-align: center; margin-top: 10px;">
+        @php
+            // Gunakan invoice_number jika ada, jika null gunakan ID sebagai cadangan
+            $trackingParam = $order->invoice_number ?? $order->id;
+            $trackingUrl = route('orders.track', ['invoice' => $trackingParam]);
+            $qrCode = base64_encode(QrCode::format('svg')->size(100)->generate($trackingUrl));
+        @endphp
+        
+        <img src="data:image/svg+xml;base64,{{ $qrCode }}">
+        <p style="font-size: 12px; font-weight: bold; margin-top: 5px;">Scan Tracking</p>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <p><strong>Status Pengerjaan:</strong> {{ $order->status_order }}</p>
+        <p style="font-size: 13px;">* Harap simpan nota ini sebagai bukti pengambilan cucian.</p>
+    </div>
+
+    <div class="footer">
+        <p>Terima kasih telah mempercayakan cucian Anda pada <strong>SmartLaundry</strong>.</p>
+        <p>Generated by Cloud Infrastructure - Multi-tenant SaaS System</p>
+    </div>
+</div>
+
+</body>
+</html>
