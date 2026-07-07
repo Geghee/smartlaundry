@@ -1,0 +1,24 @@
+services:
+  app:
+    build: .
+    container_name: aplikasi-smartlaundry
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: smartlaundry-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: smartlaundry
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
