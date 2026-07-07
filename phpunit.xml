@@ -32,5 +32,6 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="APP_KEY" value="base64:EgPDNxPPLEyde8XmG2kajjua7NOm/X5Sy1PTtMNzIy8="/>
     </php>
 </phpunit>
